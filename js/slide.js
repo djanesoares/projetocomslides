@@ -7,6 +7,9 @@ export class Slide {
     this.wrapper = document.querySelector(wrapper);
     this.dist = { finalPosition: 0, startX: 0, movement: 0 }
     this.activeClass = 'active';
+
+    // criando um evento
+    this.changeEvent = new Event('changeEvent');
   }
 
   transition(active){
@@ -105,6 +108,7 @@ export class Slide {
     this.slidesIndexNav(index);
     this.dist.finalPosition = activeSlide.position;
     this.changeActiveClass();
+    this.wrapper.dispatchEvent(this.changeEvent);
   }
 
   // para mudar a classe em ativo e não ativo
@@ -161,6 +165,11 @@ export class Slide {
 }
 
 export class SlideNav extends Slide {
+
+  constructor(slide, wrapper){
+    super(slide, wrapper)
+    this.bindControlEvents()
+  }
   
   addArrow(prev, next) {
     this.prevElement = document.querySelector(prev);
@@ -172,5 +181,55 @@ export class SlideNav extends Slide {
   addArrowEvent() {
     this.prevElement.addEventListener('click', this.activePrevSlide);
     this.nextElement.addEventListener('click', this.activeNextSlide);
+  }
+
+  // faz apresentar as bolinhas para paginação
+  createControl() {
+    const control = document.createElement('ul');
+    control.dataset.control = 'slide';
+
+  this.slideArray.forEach((item,index) => {
+    control.innerHTML += `<li><a href="#slide${index + 1}">${index + 1}</a></li>`
+  });
+    this.wrapper.appendChild(control); // adicionando automaticamente o número da navegaçao dos slides no body
+    return control;
+  }
+
+  // criando o evento e adicionando a cada um dos itens 
+  eventControl(item, index){
+    item.addEventListener('click',(event) =>{
+      event.preventDefault();
+      this.changeSlide(index);
+      });
+    this.wrapper.addEventListener('changeEvent', this.activeControlItem);
+  }
+
+  activeControlItem(){
+    this.controlArray.forEach(item => item.classList.remove(this.activeClass));
+    this.controlArray[this.index.active].classList.add(this.activeClass);
+  }
+
+  // adicionando o evento criado -
+  // addControl(){
+  //   this.control = this.createControl();
+  //   console.log(this.control)
+  // }
+
+
+  // dando a capacidade do usuário criar o próprio controle
+
+  addControl(CustomControl){
+    this.control = document.querySelector(CustomControl) || this.createControl();
+
+    this.controlArray = [...this.control.children];
+
+    this.activeControlItem();
+    this.controlArray.forEach(this.eventControl);
+
+  }
+
+  bindControlEvents(){
+    this.eventControl = this.eventControl.bind(this);
+    this.activeControlItem = this.activeControlItem.bind(this);
   }
 }
